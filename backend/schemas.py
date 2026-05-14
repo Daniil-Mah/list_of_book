@@ -1,5 +1,30 @@
 from pydantic import BaseModel
 
+class UserBase(BaseModel):
+    nickname: str
+
+class UserCreate(UserBase):
+    password: str
+
+class UserOut(UserBase):
+    id: int
+    role_adm: bool
+    class Config:
+        orm_mode = True
+
+
+class AuthorBase(BaseModel):
+    nickname: str
+
+class AuthorCreate(AuthorBase):
+    pass
+
+class AuthorOut(AuthorBase):
+    id: int
+    class Config:
+        orm_mode = True
+
+
 class BookBase(BaseModel):
     title: str
     author_id: int

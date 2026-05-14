@@ -24,6 +24,17 @@ class AuthorOut(AuthorBase):
     class Config:
         orm_mode = True
 
+class TagsBase(BaseModel):
+    tag: str
+
+class TagsCreate(TagsBase):
+    pass
+
+class TagsOut(TagsBase):
+    id: int
+    class Config:
+        orm_mode = True
+
 
 class BookBase(BaseModel):
     title: str

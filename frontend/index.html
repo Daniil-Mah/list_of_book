@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Список книг</title>
+</head>
+<body>
+    <h1>Книги</h1>
+    <form id="bookForm">
+        <input type="text" id="title" placeholder="Название" required>
+        <input type="text" id="author" placeholder="Автор" required>
+        <input type="number" id="year" placeholder="Год" required>
+        <button type="submit">Добавить</button>
+    </form>
+    <label>Сортировать по:
+        <select id="sort_by">
+            <option value="id">ID</option>
+            <option value="title">Название</option>
+            <option value="author">Автор</option>
+            <option value="year">Год</option>
+        </select>
+    </label>
+    <label>
+        <select id="order">
+            <option value="asc">По возрастанию</option>
+            <option value="desc">По убыванию</option>
+        </select>
+    </label>
+    <button onclick="loadBooks()">Обновить</button>
+    <ul id="booksList"></ul>
+    <script src="script.js"></script>
+</body>
+</html>

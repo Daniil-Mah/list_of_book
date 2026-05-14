@@ -23,3 +23,7 @@ class Books(BaseTable):
     reading_status = BooleanField(default=True)
     bookmark = CharField()
     tegs_id = IntegerField()
+
+class ConectionTags(BaseTable):
+    books_id = IntegerField()
+    tegs_id = IntegerField()

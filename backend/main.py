@@ -1,7 +1,7 @@
-from fastapi import FastAPI, HTTPException
-from typing import List
+from fastapi import FastAPI, HTTPException, Query
+from typing import List, Optional
 from .models import Users, Author, Tags, Books
-from .schemas import BookCreate, BookUpdate, BookOut
+from .schemas import BookCreate, BookUpdate, BookOut, UserCreate, UserOut, AuthorCreate, AuthorOut, TagCreate, TagUpdate, TagOut
 from .db import db
 
 app = FastAPI()
@@ -15,15 +15,31 @@ def startup():
 def shutdown():
     db.close()
 
+# ---- Книги с поиском и расширенной сортировкой ----
 @app.get("/books/", response_model=List[BookOut])
-def list_books(sort_by: str = "id", order: str = "asc"):
-    valid_fields = {"id", "title", "author_id", "tegs_id", "reading_status"}
+def list_books(
+    sort_by: str = "id",
+    order: str = "asc",
+    title: Optional[str] = None,
+    author: Optional[str] = None,
+    tag: Optional[str] = None
+):
+    valid_fields = {"id", "title", "author_id", "tags_id", "reading_status"}
     if sort_by not in valid_fields:
         sort_by = "id"
     if order not in {"asc", "desc"}:
         order = "asc"
+    query = Books.select()
+
+    if title:
+        query = query.where(Books.title.contains(title))
+    if author:
+        query = query.join(Author).where(Author.nickname.contains(author))
+    if tag:
+        query = query.join(Tags).where(Tags.name.contains(tag))
+
     order_by = getattr(getattr(Books, sort_by), order)()
-    books = Books.select().order_by(order_by)
+    books = query.order_by(order_by)
     return [BookOut.from_orm(book) for book in books]
 
 @app.post("/books/", response_model=BookOut)
@@ -49,6 +65,28 @@ def update_book(book_id: int, book_data: BookUpdate):
     book.save()
     return BookOut.from_orm(book)
 
+@app.post("/tags/", response_model=TagOut)
+def create_tag(tag: TagCreate):
+    if Tags.get_or_none(Tags.name == tag.name):
+        raise HTTPException(status_code=400, detail="Tag already exists")
+    tag_obj = Tags.create(**tag.dict())
+    return TagOut.from_orm(tag_obj)
+
+@app.put("/tags/{tag_id}", response_model=TagOut)
+def update_tag(tag_id: int, tag_data: TagUpdate):
+    tag = Tags.get_or_none(Tags.id == tag_id)
+    if not tag:
+        raise HTTPException(status_code=404, detail="Tag not found")
+    for field, value in tag_data.dict().items():
+        setattr(tag, field, value)
+    tag.save()
+    return TagOut.from_orm(tag)
+
+@app.get("/tags/", response_model=List[TagOut])
+def list_tags():
+    tags = Tags.select()
+    return [TagOut.from_orm(tag) for tag in tags]
+
 @app.post("/users/register", response_model=UserOut)
 def register_user(user: UserCreate):
     if Users.get_or_none(Users.nickname == user.nickname):
@@ -67,3 +105,11 @@ def create_author(author: AuthorCreate):
 def list_authors():
     authors = Author.select()
     return [AuthorOut.from_orm(author) for author in authors]
+
+@app.delete("/authors/{author_id}", response_model=dict)
+def delete_author(author_id: int):
+    author = Author.get_or_none(Author.id == author_id)
+    if not author:
+        raise HTTPException(status_code=404, detail="Author not found")
+    author.delete_instance(recursive=True)  # Если есть книги этого автора, они тоже удалятся (если позволяют настройки)
+    return {"ok": True}

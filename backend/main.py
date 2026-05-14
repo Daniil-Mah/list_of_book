@@ -48,3 +48,22 @@ def update_book(book_id: int, book_data: BookUpdate):
         setattr(book, field, value)
     book.save()
     return BookOut.from_orm(book)
+
+@app.post("/users/register", response_model=UserOut)
+def register_user(user: UserCreate):
+    if Users.get_or_none(Users.nickname == user.nickname):
+        raise HTTPException(status_code=400, detail="Nickname already exists")
+    user_obj = Users.create(nickname=user.nickname, password=user.password)
+    return UserOut.from_orm(user_obj)
+
+@app.post("/authors/", response_model=AuthorOut)
+def create_author(author: AuthorCreate):
+    if Author.get_or_none(Author.nickname == author.nickname):
+        raise HTTPException(status_code=400, detail="Author already exists")
+    author_obj = Author.create(nickname=author.nickname)
+    return AuthorOut.from_orm(author_obj)
+
+@app.get("/authors/", response_model=List[AuthorOut])
+def list_authors():
+    authors = Author.select()
+    return [AuthorOut.from_orm(author) for author in authors]

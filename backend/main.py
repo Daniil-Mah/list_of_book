@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from typing import List
-from .models import Books
+from .models import Users, Author, Tags, Books
 from .schemas import BookCreate, BookUpdate, BookOut
 from .db import db
 
@@ -9,7 +9,7 @@ app = FastAPI()
 @app.on_event("startup")
 def startup():
     db.connect()
-    db.create_tables([Books])  # Используется Books
+    db.create_tables([Users, Author, Tags, Books])
 
 @app.on_event("shutdown")
 def shutdown():

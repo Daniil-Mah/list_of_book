@@ -19,4 +19,3 @@ class Books(BaseTable):
     link_of_book = CharField()
     reading_status = BooleanField(default=True)
     bookmark = CharField()
-    tegs_id = IntegerField()
